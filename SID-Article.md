@@ -18,8 +18,8 @@ lot can be controlled just through the digital registers of the SID chip itself,
 even more is possible when a computer program is updating those registers at a
 rapid rate. In modern terms you can think of these programs - on the Commodore
 64 usually written in 6510 assembly language - as sophisticated sequencers that
-can also utilize LFOs (e.g. for vibrato effect) and custom macro capabilities
-(e.g. for wavetables).
+can also utilize LFOs (e.g. for vibrato effect), custom macro capabilities
+(e.g. for wavetables), and several other tricks.
 
 Soon after the Commodore 64 was released the SID became a beloved playground of
 great musicians making music for the burgeoning game industry, with people like
@@ -133,16 +133,17 @@ themselves. See [Mythbusting the 6581 revisions](https://ultimatesid.dk/).
 As you can see on the pinout diagram above the SID chip has a 5-bit address bus
 through which a theoretical total of 32 internal registers of the chip can be
 accessed. Of the 32 _possible_ registers  29 are actually utilized in the SID
-chip (addresses 00..1C - addresses 1D-1F are not used). On a Commodore 64 these
-registers are mapped to memory addresses (a.k.a. _Memory-mapped I/O_ ) in the
-range of `$D400..$D420` (hexadecimal). This means that the Commodore 64 sees the
-SID at these memory addresses and it can write to the internal registers
-('control-bytes') of the SID just like to any other portion of the memory.
-Whenever you write to these addresses you essentially modify the flip-flops
-inside the SID, which in turn set parameters like pitch, envelope, filter, etc.
-in real-time. Simple, isn't it? (With modern hardware mods more SID chips can be
-added to the C64 and in that case their base-addresses differ from `$D400`.
-There's no set specification, yet, for what address they should reside at.)
+chip (addresses `$00..$1C` hexadecimal - addresses `$1D-$1F` are not used). On a
+Commodore 64 these registers are mapped to memory addresses (a.k.a. _Memory-
+mapped I/O_ ) in the range of `$D400..$D41C` (hexadecimal). This means that the
+Commodore 64 sees the SID at these memory addresses and it can write to the
+internal registers ('control-bytes') of the SID just like to any other portion
+of the memory. Whenever you write to these addresses you essentially modify the
+flip-flops inside the SID, which in turn set parameters like pitch, envelope,
+filter, etc. in real-time. Simple, isn't it? (With modern hardware mods more SID
+chips can be added to the C64 and in that case their base-addresses differ from
+`$D400`. There's no set specification, yet, for what address they should reside
+at.)
 
 __TODO__: Really? I thought the SID file format specifies these addresses?...
 
@@ -152,9 +153,21 @@ to mention bit-fading which makes tricks like Hein's `ROR D400,X` possible.
 
 __TODO__: This ROR trick is never explained in this document. Also, needs reference link.
 
-Let's examine the registers for the 3 channels one-by-one. (NOTE: 'Voices',
-'channels' and 'oscillators' are usually used interchangeably when discussing
-the SID chip. In this document we'll refer to them as 'channels'.)
+Internally the SID chip consists of 3 digitally controlled oscillators with
+analog outputs which are mixed together to the analog AUDIO OUT pin of the chip.
+In addition, it is possible to route any combination of the 3 analog outputs to
+an analog filter stage before the final audio output. At any given point in time
+the SID chip can produce at most 3 distinct sounds simultaneously. By the way,
+this is true even when the SID chip is playing a digi sample 'over' the 3
+oscillators - in that case the digital sample is technically just an _artifact_,
+an _illusion_ as the SID's hardware is still only producing 3 oscillated sounds
+at once.
+
+NOTE: 'Voices', 'channels' and 'oscillators' are usually used interchangeably
+when discussing the SID chip. In this document we'll refer to them as
+'channels'.
+
+With that said, let's examine the registers for the 3 channels one-by-one.
 
 ### Pitch
 
