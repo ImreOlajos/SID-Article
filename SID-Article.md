@@ -1,8 +1,7 @@
 ---
-# SID-Article 0.2
+# SID-Article v0.2
 
 **_MOS Technology SID soundchip internals and applications on the Commodore 64_**
-
 ---
 
 ## What is the SID Chip?
