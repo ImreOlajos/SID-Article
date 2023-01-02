@@ -130,10 +130,14 @@ themselves. See [Mythbusting the 6581 revisions](https://ultimatesid.dk/).
 
 ## How Does the C64 Control the SID? (Registers)
 
-The method to control the sound-parameters of a SID in a Commodore 64 is called
-_Memory-mapped I/O_. This means that the Commodore 64 sees the SID at addresses
-`$D400..$D420` (hexadecimal) and it can write to the internal registers
-('control- bytes') of the SID just like to any other portion of the memory.
+As you can see on the pinout diagram above the SID chip has a 5-bit address bus
+through which a theoretical total of 32 internal registers of the chip can be
+accessed. Of the 32 _possible_ registers  29 are actually utilized in the SID
+chip (addresses 00..1C - addresses 1D-1F are not used). On a Commodore 64 these
+registers are mapped to memory addresses (a.k.a. _Memory-mapped I/O_ ) in the
+range of `$D400..$D420` (hexadecimal). This means that the Commodore 64 sees the
+SID at these memory addresses and it can write to the internal registers
+('control-bytes') of the SID just like to any other portion of the memory.
 Whenever you write to these addresses you essentially modify the flip-flops
 inside the SID, which in turn set parameters like pitch, envelope, filter, etc.
 in real-time. Simple, isn't it? (With modern hardware mods more SID chips can be
@@ -145,15 +149,20 @@ __TODO__: Really? I thought the SID file format specifies these addresses?...
 Most registers are write-only and you can't read them back, but there is also a
 little feedback from SID towards the C64 in the form of read-only registers, not
 to mention bit-fading which makes tricks like Hein's `ROR D400,X` possible.
-Let's examine the registers for the 3 channels one-by-one:
+
+__TODO__: This ROR trick is never explained in this document. Also, needs reference link.
+
+Let's examine the registers for the 3 channels one-by-one. (NOTE: 'Voices',
+'channels' and 'oscillators' are usually used interchangeably when discussing
+the SID chip. In this document we'll refer to them as 'channels'.)
 
 ### Pitch
 
-| __Voice__ | __Low byte__ | __High byte__ |
+| Channel   | Low byte     | High byte     |
 | --------- |:------------:|:-------------:|
-| Voice 1   | `$D400`      | `$D401`       |
-| Voice 2   | `$D407`      | `$D408`       |
-| Voice 3   | `$D40E`      | `$D40F`       |
+| Channel 1 | `$D400`      | `$D401`       |
+| Channel 2 | `$D407`      | `$D408`       |
+| Channel 3 | `$D40E`      | `$D40F`       |
 
 Pitch low-, and high-byte. These bytes together control the pitch of an
 oscillator. 16 bits give us quite enough resolution to make perfect pitches in
@@ -168,11 +177,11 @@ tempered chromatic (Western) scale successive notes have the frequency ratio of
 
 ### Pulse Width (Duty-cycle) of the Square Waveform
 
-| __Voice__ | __Low byte__ | __High byte__ (bits 0..3 only) |
+| Channel   | Low byte     | High byte (bits 0..3 only)     |
 | --------- |:------------:|:------------------------------:|
-| Voice 1   | `$D402`      | `$D403`                        |
-| Voice 2   | `$D409`      | `$D40A`                        |
-| Voice 3   | `$D410`      | `$D411`                        |
+| Channel 1 | `$D402`      | `$D403`                        |
+| Channel 2 | `$D409`      | `$D40A`                        |
+| Channel 3 | `$D410`      | `$D411`                        |
 
 Pulse width (duty-cycle) of the square waveform. This is a really important
 feature of the SID chip because variations of the pulse (square) wave have very
@@ -192,11 +201,11 @@ not always the case with emulated SID sounds of only 44kHz or so.
 
 ### Waveform and Envelope Control
 
-| __Voice__ | __Byte__     |
+| Channel   | Byte         |
 | --------- |:------------:|
-| Voice 1   | `$D404`      |
-| Voice 2   | `$D40B`      |
-| Voice 3   | `$D412`      |
+| Channel 1 | `$D404`      |
+| Channel 2 | `$D40B`      |
+| Channel 3 | `$D412`      |
 
 The bits in this register control different things separately. The upper nybble
 controls which of the 4 available waveforms are turned on. They can also be
@@ -260,11 +269,11 @@ it starts and stops the notes, so to speak.
 
 ### Attack/Decay/Sustain/Release (ADSR) Envelope Generator Settings
 
-| __Voice__ | __Attack, Decay__ | __Sustain, Release__ |
+| Channel   | Attack, Decay     | Sustain, Release     |
 | --------- |:-----------------:|:--------------------:|
-| Voice 1   | `$D405`           | `$D406`              |
-| Voice 2   | `$D40C`           | `$D40D`              |
-| Voice 3   | `$D413`           | `$D414`              |
+| Channel 1 | `$D405`           | `$D406`              |
+| Channel 2 | `$D40C`           | `$D40D`              |
+| Channel 3 | `$D413`           | `$D414`              |
 
 * _Attack_: Bits 4..7
 * _Decay_: Bits 0..3
@@ -343,9 +352,9 @@ high resonances boost the signal.
 
 | __Bit__       | __Control__      |
 | ---------     |:----------------:|
-| Bit 0 (`$01`) | Voice 1          |
-| Bit 1 (`$02`) | Voice 2          |
-| Bit 2 (`$04`) | Voice 3          |
+| Bit 0 (`$01`) | Channel 1        |
+| Bit 1 (`$02`) | Channel 2        |
+| Bit 2 (`$04`) | Channel 3        |
 | Bit 3 (`$08`) | External input   |
 | Bit 4..7      | Filter resonance |
 
@@ -382,7 +391,7 @@ used as a wah-effect pedal.
 | Bit 4 (`$10`) | Low pass         |
 | Bit 5 (`$20`) | Band pass        |
 | Bit 6 (`$40`) | High pass        |
-| Bit 7 (`$80`) | Mute voice 3     |
+| Bit 7 (`$80`) | Mute channel 3   |
 
 The low nybble of this register controls the main volume of the SID. There is a
 little bit of leakage though, so even when you set it to 0 it passes through a
@@ -425,12 +434,12 @@ capacitor. Unfortunately this measurement has a jittering even with steady
 input. Software-based filtering can help to smooth this out. (A 'moving average'
 filter works just fine.)
 
-### Oscillator and Envelope of Voice 3 (Read-only)
+### Oscillator and Envelope of Channel 3 (Read-only)
 
 |                              | __Byte__ |
 | ---------------------------- |:--------:|
-| Oscillator voice 3 (OSC3)    | `$D41B`  |
-| Envelope voice 3 (ENV3)      | `$D41C`  |
+| Oscillator channel 3 (OSC3)  | `$D41B`  |
+| Envelope channel 3 (ENV3)    | `$D41C`  |
 
 
 These are 8-bit readable registers that represent the waveform selector and
