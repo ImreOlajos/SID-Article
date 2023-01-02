@@ -50,13 +50,13 @@ of the SID chip.
 There are many resourceful materials about the SID on the Internet already, but
 it can be very tiresome to dig them all up from different places. There is an
 overall technical document about the graphic chip of the C64 called VIC-article.
-Surprisingly there hasn't been a similar document for the SID - until now. Some
-of the sources used here was an interview Hermit made with Boba Yannes, the
-source-code comments of Dag Lem's ReSID, the ReSID-FP engine, the Kevtris
-reverse-engineering site, a document about DC levels by Levente Hársfalvi, and
-Hermit's own findings that will be explained later. So hopefully this document
-collects sufficient information for you in this article in one place to get the
-big picture.
+( __TODO__: Add link to VIC-article. ) Surprisingly there hasn't been a similar
+document for the SID - until now. Some of the sources used here was an interview
+Hermit made with Bob Yannes, the source-code comments of Dag Lem's ReSID, the
+ReSID-FP engine, the Kevtris reverse-engineering site, a document about DC
+levels by Levente Hársfalvi, and Hermit's own findings that will be explained
+later. So hopefully this document collects sufficient information for you in
+this article in one place to get the big picture.
 
 ## Revisions and Location of the SID Chip
 
@@ -113,7 +113,7 @@ themselves. See [Mythbusting the 6581 revisions](https://ultimatesid.dk/).
 | CAP1A, CAP1B  | Filter capacitor 1 (6581: 470 pF, 8580: 20 nF |
 | CAP2A, CAP2B  | Filter capacitor 2 (6581: 470 pF, 8580: 20 nF |
 | !RES          | Reset input - if low for at least 10 phi2 cycles, all internal registers reset |
-| PHI2          | Input for system oscillator, eceives data only when high |
+| PHI2          | Input for system oscillator, receives data only when high |
 | R/!W          | High = read allowed, Low = write allowed |
 | !CS           | Chip Select - active low input, bus data needs to be valid when active |
 | A0..A4        | Address inputs to select one of the 32 internal registers |
@@ -131,8 +131,8 @@ themselves. See [Mythbusting the 6581 revisions](https://ultimatesid.dk/).
 ## How Does the C64 Control the SID? (Registers)
 
 As you can see on the pinout diagram above the SID chip has a 5-bit address bus
-through which a theoretical total of 32 internal registers of the chip can be
-accessed. Of the 32 _possible_ registers  29 are actually utilized in the SID
+through which a theoretical total of 32 internal 8-bit registers of the chip can
+be accessed. Of the 32 _possible_ registers  29 are actually utilized in the SID
 chip (addresses `$00..$1C` hexadecimal - addresses `$1D-$1F` are not used). On a
 Commodore 64 these registers are mapped to memory addresses (a.k.a. _Memory-
 mapped I/O_ ) in the range of `$D400..$D41C` (hexadecimal). This means that the
@@ -206,7 +206,7 @@ chorus effect.
 
 Luckily, the shape of some combined waveforms can also be altered by the duty-
 cycle setting, giving even more timbres to choose from. The upper byte has only
-the lower nybble (lower 4 bits) wired in so there are 4096 possibilities of
+the lower nibble (lower 4 bits) wired in so there are 4096 possibilities of
 pulsewidth to choose from, between 0 and 100% duty-cycle from the thinnest to
 the fattest sound. One of the strengths of the SID is that it essentially
 operates at 1MHz 'sampling' frequency and the thinnest sounds are clear. This is
@@ -220,7 +220,7 @@ not always the case with emulated SID sounds of only 44kHz or so.
 | Channel 2 | `$D40B`      |
 | Channel 3 | `$D412`      |
 
-The bits in this register control different things separately. The upper nybble
+The bits in this register control different things separately. The upper nibble
 controls which of the 4 available waveforms are turned on. They can also be
 turned on at the same time due to the properties of the underlying silicon
 technology. This results in the the so-called 'combined waveforms' which Bob
@@ -371,7 +371,7 @@ high resonances boost the signal.
 | Bit 3 (`$08`) | External input   |
 | Bit 4..7      | Filter resonance |
 
-The high-nybble here controls the resonance of the filter, the hump at the
+The high-nibble here controls the resonance of the filter, the hump at the
 cutoff frequency. The filter sounds more prominent with this setting than a neutral
 curve with no emphasis. Just like the cutoff-control, this behaves differently
 for the different SID-models: the 6581 doesn't change much up to a point while
@@ -380,7 +380,7 @@ the 8580's resonance-control is continuous, although it's non-linear.
 Setting high resonance can lead to distortions as the magnified signal's level
 approaches the limits presented by the 9V/12V power.
 
-The low nybble has 3 bits dedicated to turn the filter on/off for the separate
+The low nbble has 3 bits dedicated to turn the filter on/off for the separate
 channels: bit 2 (value 4):channel 3, bit 1 (2):channel 2, bit 0 (1):channel 1.
 The number of selected filtered channels has a small effect on the cutoff and
 resonance, but it's not very noticable.
@@ -406,9 +406,9 @@ used as a wah-effect pedal.
 | Bit 6 (`$40`) | High pass        |
 | Bit 7 (`$80`) | Mute channel 3   |
 
-The low nybble of this register controls the main volume of the SID. There is a
+The low nibble of this register controls the main volume of the SID. There is a
 little bit of leakage though, so even when you set it to 0 it passes through a
-little amount of sound. However, the more important fact about this nybble is
+little amount of sound. However, the more important fact about this nibble is
 that it causes a little shift in the output signal. The bigger the volume the
 more the offset is. Since the 1980s this artifact was utilized to play digital
 samples (or 'digis'). This effect is much less noticable in the refined 8580
@@ -417,7 +417,7 @@ speech is barely audible on them. But this somewhat compensates for the harsh
 clicks of the 6581 that appear when the master volume or filter- parameters are
 changed.
 
-The high nybble of this register has 3 bits that control what kind of filter to
+The high nibble of this register has 3 bits that control what kind of filter to
 use: bit 6 (value `$40`): high-pass, bit 5 (`$20`): band-pass, bit 4 (`$10`):
 low- pass. These modes can be combined together to form e.g. a notch-filter or a
 low- pass filter with brighter sound.
@@ -658,7 +658,7 @@ waveform control register, three internal counters (per channel) are operated:
   envelope-counter in Attack/Decay/Release phases. Tthese are the prescale
   values (periods) for the Attack/Decay/Release values of 0..F:
 
-  | Nybble value | Periods |
+  | Nibble value | Periods |
   | ------------:| ------- |
   |            0 | 9       |
   |            1 | 32      |
@@ -695,9 +695,6 @@ waveform control register, three internal counters (per channel) are operated:
   |                         6..1 | 30x            |
   |                            0 | 1x             |
 
-
-  255..95:1x, 93..55:2x, 54..27:4x, 26..15:8x, 14..7:16x, 6..1:30x, 0:1x
-
   (At the start of a fast 1x prescaling/division, it gradually grows to a 30x
   slow decay when the envelope-counter falls below 6.)
 
@@ -713,7 +710,7 @@ Attack-phase lasts until the envelope-counter counts up to `$FF` then it's
 turned off and the Decay+Sustain-phase dominates in which the envelope-counter
 through the exponent-counter prescaling counts down until it reaches the
 sustain-value. (Which is expanded to 0..$FF by doubling the 0..F sustain-value
-to the high-nybble.)
+to the high-nibble.)
 
 A transition of GATE-bit to 0 turns off any Attack or Decay+Sustain-phase and
 counts down through the exp-prescaler until it reaches 0 (Release-phase) and
